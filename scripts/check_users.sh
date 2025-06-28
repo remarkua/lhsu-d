@@ -1,15 +1,20 @@
 #!/bin/bash
 echo "Проверка основных пользователей..."
 for user in $(cut -d: -f1 /etc/passwd); do
-    echo "Пользователь: $user"
-    if id -nG "$user" | grep -qw "sudo"; then
-        echo "Принадлежит к группе sudo."
-    else
-        echo "Не принадлежит к группе sudo."
-    fi
-    if [[ $(stat -c "%U" "/home/$user") == "$user" ]]; then
-        echo "Имеет домашний каталог."
-    else
-        echo "Не имеет домашнего каталога."
+    home_dir=$(getent passwd "$user" | cut -d: -f6)
+    password=$(getent passwd "$user" | cut -d: -f2)
+    groups=$(id -Gn "$user")
+
+    if [[ "$user" == "root" || "$home_dir" == /home/* ]]; then
+        echo "Пользователь: $user"
+        echo "Принадлежит к группам: $groups"
+        echo "Домашний каталог: $home_dir"
+        if [[ "$password" == "x" ]]; then
+            echo "Наличие пароля: Да"
+        else
+            echo "Наличие пароля: Нет"
+        fi
+        echo ""
     fi
 done
+
